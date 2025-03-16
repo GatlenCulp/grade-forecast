@@ -1,118 +1,130 @@
-# 6.1800 - Computer Systems Engineering 🌐
+# 6.4110 - Representation, Inference, and Reasoning in AI 🤷🏻‍♀️
 
 # 📚 Course Resources
 # -------------------
-# [Website](https://web.mit.edu/6.1800/www/)
-# [Recitation Slides](https://drive.google.com/drive/u/0/folders/1-D5N9aUnUPstulpASXqS0p9tXJiFzuyQ)
-# [Tidbits](https://lmwilson.scripts.mit.edu/6.1800/tidbits/)
-# [Piazza](https://piazza.com/class/m5ybrxanpen5wz)
+# [Website](https://airr.mit.edu/spring25/calendar)
+# [Piazza](https://piazza.com/class/m6cbdy9ely648f/post/6)
 # [Canvas (Unused)](https://canvas.mit.edu/courses/31100)
 # [Lecture Recordings (Panopto)](https://mit.hosted.panopto.com/Panopto/Pages/Sessions/List.aspx#query=%226.4110%22)
-# [GitHub Repo](https://github.com/GatlenCulp/mit_computer_systems) (Gatlen Only)
+# [Notation](https://airr.mit.edu/_static/fall23/Glossary.pdf)
+# [GitHub Repo](https://github.com/GatlenCulp/uncertainty) (Gatlen Only)
 
 # 🧑‍🏫 Instructor and Contact Information
 # ---------------------------------------
-# **Lecturer**
-# - Katrina LaCurts (lacurts@mit.edu)
-#
-# **Recitation Instructors**
-# - Olivia Brode-Roger (nibr@mit.edu)
-#
-# **Wrap Instructors**
-# - Rebecca Thorndike-Breeze (rtb@mit.edu)
-# - Rachel Molko (molko@mit.edu)
+# **Instructor**
+# - Leslie Kaelbling (lpk@csail.mit.edu)
 #
 # **TAs**
-# - Emeka Echezona (echezona@mit.edu)
-# - Contact: 6.1800-utas@mit.edu
-#
-# **Tutorial Leader**
-# - Jessie Stickgold-Sarah (jmss@mit.edu)
+# - Jagdeep Bhatia (jagdeep@mit.edu)
+# - Nishanth Kumar (njk@mit.edu)
+# - Ethan Yang (ethany@mit.edu)
+# - Ryan Yang (ryanyang@mit.edu)
+# - Sunshine Jiang (sunsh16e@mit.edu)
+# - Ellery Stahler (ellerys@mit.edu)
+# - Ellen Zhang (ellen660@mit.edu)
 
 # 📅 Schedule
 # -----------
-# Lec: Monday & Tuesday 02:00 PM — 03:00 PM
-# Rec: Tuesday & Thursday 10:00 AM — 11:00 AM
+# Lec: Monday & Wednesday 09:30 AM — 11:00 AM
+# Rec: TBD
 
 # 🤝 Collaboration & AI Policy
 # ----------------------------
 # Can collaborate, but solutions must be separate. Solutions differing by variable names will not receive full credit.
 
-# 📕 Text Book
+# 📕 Text Books
 # ------------
-# Principles of Computer System Design: An Introduction
-# - Full text: https://ocw.mit.edu/courses/res-6-004-principles-of-computer-system-design-an-introduction-spring-2009/pages/online-textbook/
-# - Part 1: [N/A]
+# - Artificial Intelligence: A Modern Approach "AIMA" (4th Edition) by Russel & Norvig
+# - Bayesian Reasoning and Machine Learning by David Barber
+# - Algorithms for Decision Making by Kochenderfer, Wheeler, Wray (deprecated)
+
+# 💻 Problem Sets
+# -------------
+# - -10% per day late
+# - 10 late-day waivers applied retroactively at end of semester
+#
+# PSETs:
+# - HW00: Background
+# - HW01: Search, intro CSP
+# - HW02: CSP, PDDL
+# - HW03: Continuous, conditional, conformant planning
+# - HW04: Prop logic
+# - HW05: Intro graphical models
+# - HW06: Discrete graphical models
+# - HW07: Continuous, temporal models
+# - HW08: MDPs
+# - HW09: POMDPs
+# - HW10: Bandits and FOL
 
 # 📝 Course Content
 # ----------------
-# Topics on the engineering of computer software and hardware systems: techniques for controlling complexity; strong modularity using client-server design, operating systems; performance, networks; naming; security and privacy; fault-tolerant systems, atomicity and coordination of concurrent activities, and recovery; impact of computer systems on society. Case studies of working systems and readings from the current literature provide comparisons and contrasts. Includes a single, semester-long design project. Students engage in extensive written communication exercises. Enrollment may be limited.
+# An introduction to representations and algorithms for artificial intelligence. Topics covered include: constraint satisfaction in discrete and continuous problems, logical representation and inference, Monte Carlo tree search, probabilistic graphical models and inference, planning in discrete and continuous deterministic and probabilistic models including MDPs and POMDPs.
 
 # Course Meta
 # -----------
-# Course Number: 6.1800
-# Long Name: Computer Systems Engineering
-# Short Name: CompSys
-# Logo: 🌐
-# Color: Command Line Green
+# Course Number: 6.4110
+# Long Name: Representation, Inference, and Reasoning in AI
+# Short Name: Uncertainty
+# Logo: 🤷🏻‍♀️ (Shrug)
+# Color: Royal Confusion Purple
 
 from gf.classes import Course, GradingGroup, Task
 
-computer_systems = Course(
-    name="6.1800 - Computer Systems Engineering",
+uncertainty = Course(
+    name="6.4110 - Representation, Inference, and Reasoning in AI",
     care_factor=1,
     grading_groups=[
         GradingGroup(
-            name="Exams",
-            weight=0.30,
+            name="Problem Sets",
+            weight=0.50,
             tasks=[
-                Task("Exam 1", grade=None),
-                Task("Exam 2", grade=None),
+                Task("HW00 - Background", grade=None),
+                Task("HW01 - Search, intro CSP", grade=None),
+                Task("HW02 - CSP, PDDL", grade=None),
+                Task("HW03 - Continuous, conditional, conformant planning", grade=None),
+                Task("HW04 - Prop logic", grade=None),
+                Task("HW05 - Intro graphical models", grade=None),
+                Task("HW06 - Discrete graphical models", grade=None),
+                Task("HW07 - Continuous, temporal models", grade=None),
+                Task("HW08 - MDPs", grade=None),
+                Task("HW09 - POMDPs", grade=None),
+                Task("HW10 - Bandits and FOL", grade=None),
             ],
-            default_pst=20,  # Assuming 20 hours per exam
-            expected_grade=0.70,
+            default_pst=15,  # Assuming 15 hours per PSET
+            late_policy="-10% per day, 10 late days available",
+            expected_grade=0.85,
             base_grade=0,
         ),
         GradingGroup(
-            name="Hands On",
-            weight=0.30,
-            tasks=[
-                Task("Hands On 1", grade=None),
-                Task("Hands On 2", grade=None),
-                Task("Hands On 3", grade=None),
-                Task("Hands On 4", grade=None),
-                Task("Hands On 5", grade=None),
-                Task("Hands On 6", grade=None),
-            ],
-            default_pst=10,  # Assuming 10 hours per hands-on
-            late_policy="Lowest grade dropped",
-            expected_grade=0.80,
-            base_grade=0,
-        ),
-        GradingGroup(
-            name="Design Project",
-            weight=0.40,
-            tasks=[
-                Task("DP Prep Assignment", grade=None),
-                Task("DP Preliminary Report + Presentation", grade=None),
-                Task("DP Report", grade=None),
-                Task("DP Peer Review", grade=None),
-            ],
-            default_pst=40,  # Assuming 40 hours for the entire project
-            expected_grade=0.90,
-            base_grade=0,
-        ),
-        GradingGroup(
-            name="Participation",
+            name="Midterm",
             weight=0.25,
             tasks=[
-                Task("Recitation Participation", grade=None),  # 26 sessions, 0.8% each
-                Task("Communication Participation", grade=None),
+                Task("Midterm Exam", grade=None),
             ],
-            default_pst=2,  # 2 hours per week
-            expected_grade=0.95,
+            default_pst=25,  # Assuming 25 hours of study time
+            expected_grade=0.85,
             base_grade=0,
         ),
+        GradingGroup(
+            name="Final",
+            weight=0.25,
+            tasks=[
+                Task("Final Exam", grade=None),
+            ],
+            default_pst=35,  # Assuming 35 hours of study time
+            expected_grade=0.85,
+            base_grade=0,
+        ),
+        # GradingGroup(
+        #     name="Lecture Attendance",
+        #     weight=0.05,  # Max bonus
+        #     tasks=[
+        #         Task("Lecture Attendance", grade=None),  # 0.25% per lecture up to 5%
+        #     ],
+        #     default_pst=0,  # No additional time required
+        #     expected_grade=1.0,
+        #     base_grade=0,
+        # ),
     ],
     grading_boundaries={
         "A": (90, 100),

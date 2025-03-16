@@ -1,98 +1,109 @@
-# 6.4110 - Representation, Inference, and Reasoning in AI 🤷🏻‍♀️
+from gf.classes import Course, GradingGroup, Task
+
+# 6.1400 - Computability and Complexity Theory 📼
 
 # 📚 Course Resources
 # -------------------
-# [Website](https://airr.mit.edu/spring25/calendar)
-# [Piazza](https://piazza.com/class/m6cbdy9ely648f/post/6)
+# [Website](https://people.csail.mit.edu/rrw/6.1400-2025/index.html)
+# [Piazza](https://piazza.com/mit/spring2025/61400/home)
+# [Piazza Resources](https://piazza.com/mit/spring2025/61400/resources)
 # [Canvas (Unused)](https://canvas.mit.edu/courses/31100)
 # [Lecture Recordings (Panopto)](https://mit.hosted.panopto.com/Panopto/Pages/Sessions/List.aspx#query=%226.4110%22)
-# [Notation](https://airr.mit.edu/_static/fall23/Glossary.pdf)
-# [GitHub Repo](https://github.com/GatlenCulp/uncertainty) (Gatlen Only)
+# [GitHub Repo](https://github.com/GatlenCulp/mit_complexity_theory) (Gatlen Only)
 
 # 🧑‍🏫 Instructor and Contact Information
 # ---------------------------------------
 # **Instructor**
-# - Leslie Kaelbling (lpk@csail.mit.edu)
+# Ryan Williams (rrw@mit.edu)
+# OH: Wednesday 11:00 AM — 12:30 PM, 32-G678 (his office)
 #
 # **TAs**
-# - Jagdeep Bhatia (jagdeep@mit.edu)
-# - Nishanth Kumar (njk@mit.edu)
-# - Ethan Yang (ethany@mit.edu)
-# - Ryan Yang (ryanyang@mit.edu)
-# - Sunshine Jiang (sunsh16e@mit.edu)
-# - Ellery Stahler (ellerys@mit.edu)
-# - Ellen Zhang (ellen660@mit.edu)
+# - Jakin Ng (jakinng@mit.edu)
+#   - Rec: Friday 11:00 AM — 12:00 PM
+#   - OH: Tuesday 12:30 PM — 02:00 PM, TBD
+# - Jiatu Li (jiatuli@mit.edu)
+#   - Rec: Friday 01:00 PM — 02:00 PM
+#   - OH: Tuesday 04:00 PM — 05:30 PM, 32-G5-Lounge
 
 # 📅 Schedule
 # -----------
-# Lec: Monday & Wednesday 09:30 AM — 11:00 AM
-# Rec: TBD
+# Lec: Tuesdays & Thursdays 02:30 PM — 04:00 PM
+# Rec: Fridays 11:00 AM — 12:00 PM
 
 # 🤝 Collaboration & AI Policy
 # ----------------------------
-# Can collaborate, but solutions must be separate. Solutions differing by variable names will not receive full credit.
+# - Can collaborate, but solutions must be separate
+# - Solutions differing by variable names will not receive full credit
+# - No ChatGPT allowed
 
-# 📕 Text Books
+# 📕 Text Book
 # ------------
-# - Artificial Intelligence: A Modern Approach "AIMA" (4th Edition) by Russel & Norvig
-# - Bayesian Reasoning and Machine Learning by David Barber
-# - Algorithms for Decision Making by Kochenderfer, Wheeler, Wray (deprecated)
+# Intro to the Theory of Computation by Sipser (aka "Sipser")
 
-# 💻 Problem Sets
-# -------------
-# - -10% per day late
-# - 10 late-day waivers applied retroactively at end of semester
+# 💻 PSETs
+# --------
+# - Weekly PSETs, released Thursday, due Friday
+# - Must be completed in LaTeX
+# - No late days allowed
+# - Lowest PSET is dropped
+
+# 💯 Exams
+# --------
+# - One single-sided sheet of notes (8.5x11) allowed
+# - Otherwise closed-book
+# - Midterm: March 18th (In Class)
+
+# 📝 Grading Policy
+# -----------------
+# Letter Grades:
+# - A = [90%, 100%]
+# - B = [80%, 90%)
+# - C = [70%, 80%)
+# - F = [0%, 60%)
 #
-# PSETs:
-# - HW00: Background
-# - HW01: Search, intro CSP
-# - HW02: CSP, PDDL
-# - HW03: Continuous, conditional, conformant planning
-# - HW04: Prop logic
-# - HW05: Intro graphical models
-# - HW06: Discrete graphical models
-# - HW07: Continuous, temporal models
-# - HW08: MDPs
-# - HW09: POMDPs
-# - HW10: Bandits and FOL
+# Note: The A/B cutoff has historically been in the low 80s/high 70s.
+# Participation in lecture and recitation can lead to grade flexibility.
+#
+# Grade Components:
+# | Component                      | Weight |
+# | ------------------------------ | ------ |
+# | PSets (9 total, lowest dropped)| 40%    |
+# | Midterm (March 18th)           | 25%    |
+# | Final                          | 35%    |
 
 # 📝 Course Content
 # ----------------
-# An introduction to representations and algorithms for artificial intelligence. Topics covered include: constraint satisfaction in discrete and continuous problems, logical representation and inference, Monte Carlo tree search, probabilistic graphical models and inference, planning in discrete and continuous deterministic and probabilistic models including MDPs and POMDPs.
+# Mathematical introduction to the theory of computing. Rigorously explores what kinds of tasks can be efficiently solved with computers by way of finite automata, circuits, Turing machines, and communication complexity, introducing students to some major open problems in mathematics. Builds skills in classifying computational tasks in terms of their difficulty. Discusses other fundamental issues in computing, including the Halting Problem, the Church-Turing Thesis, the P versus NP problem, and the power of randomness.
 
 # Course Meta
 # -----------
-# Course Number: 6.4110
-# Long Name: Representation, Inference, and Reasoning in AI
-# Short Name: Uncertainty
-# Logo: 🤷🏻‍♀️ (Shrug)
-# Color: Royal Confusion Purple
+# Course Number: 6.1400
+# Long Name: Computability and Complexity Theory
+# Short Name: Complexity
+# Logo: 📼 (Turing Machine Tape)
+# Color: Bubble Gum Godel
 
-from gf.classes import Course, GradingGroup, Task
-
-uncertainty = Course(
-    name="6.4110 - Representation, Inference, and Reasoning in AI",
+complexity = Course(
+    name="6.1400 - Computability and Complexity Theory",
     care_factor=1,
     grading_groups=[
         GradingGroup(
             name="Problem Sets",
-            weight=0.50,
+            weight=0.40,
             tasks=[
-                Task("HW00 - Background", grade=None),
-                Task("HW01 - Search, intro CSP", grade=None),
-                Task("HW02 - CSP, PDDL", grade=None),
-                Task("HW03 - Continuous, conditional, conformant planning", grade=None),
-                Task("HW04 - Prop logic", grade=None),
-                Task("HW05 - Intro graphical models", grade=None),
-                Task("HW06 - Discrete graphical models", grade=None),
-                Task("HW07 - Continuous, temporal models", grade=None),
-                Task("HW08 - MDPs", grade=None),
-                Task("HW09 - POMDPs", grade=None),
-                Task("HW10 - Bandits and FOL", grade=None),
+                Task("PSET #1", grade=None),
+                Task("PSET #2", grade=None),
+                Task("PSET #3", grade=None),
+                Task("PSET #4", grade=None),
+                Task("PSET #5", grade=None),
+                Task("PSET #6", grade=None),
+                Task("PSET #7", grade=None),
+                Task("PSET #8", grade=None),
+                Task("PSET #9", grade=None),
             ],
-            default_pst=15,  # Assuming 15 hours per PSET
-            late_policy="-10% per day, 10 late days available",
-            expected_grade=0.85,
+            default_pst=8,  # Assuming 8 hours per PSET
+            late_policy="No late days.",
+            expected_grade=0.75,
             base_grade=0,
         ),
         GradingGroup(
@@ -101,36 +112,26 @@ uncertainty = Course(
             tasks=[
                 Task("Midterm Exam", grade=None),
             ],
-            default_pst=25,  # Assuming 25 hours of study time
-            expected_grade=0.85,
+            default_pst=20,  # Assuming 20 hours of study time
+            expected_grade=0.60,
             base_grade=0,
         ),
         GradingGroup(
             name="Final",
-            weight=0.25,
+            weight=0.35,
             tasks=[
                 Task("Final Exam", grade=None),
             ],
-            default_pst=35,  # Assuming 35 hours of study time
-            expected_grade=0.85,
+            default_pst=30,  # Assuming 30 hours of study time
+            expected_grade=0.60,
             base_grade=0,
         ),
-        # GradingGroup(
-        #     name="Lecture Attendance",
-        #     weight=0.05,  # Max bonus
-        #     tasks=[
-        #         Task("Lecture Attendance", grade=None),  # 0.25% per lecture up to 5%
-        #     ],
-        #     default_pst=0,  # No additional time required
-        #     expected_grade=1.0,
-        #     base_grade=0,
-        # ),
     ],
     grading_boundaries={
-        "A": (90, 100),
-        "B": (80, 90),
-        "C": (70, 80),
-        "F": (0, 60),
+        "A": (85, 100),
+        "B": (75, 85),
+        "C": (65, 75),
+        "F": (0, 65),
     },
 )
 
