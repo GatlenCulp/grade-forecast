@@ -1,11 +1,11 @@
 """Utility functions for the grade forecast CLI."""
 
-from typing import List, Optional, Union
+from typing import Optional
 
 from gf.classes import Course, Task
 
 
-def find_course(course_input: str, courses: List[Course]) -> Optional[Course]:
+def find_course(course_input: str, courses: list[Course]) -> Optional[Course]:
     """Find a course by name or index.
 
     Args:
@@ -26,7 +26,7 @@ def find_course(course_input: str, courses: List[Course]) -> Optional[Course]:
     return None
 
 
-def find_task(task_input: str, course: Course, all_tasks: List[Task]) -> Optional[Task]:
+def find_task(task_input: str, course: Course, all_tasks: list[Task]) -> Optional[Task]:
     """Find a task by name or index.
 
     Args:

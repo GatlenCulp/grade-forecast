@@ -7,9 +7,9 @@ from rich.traceback import install
 from configs import configs
 from configs.examples.prog_fund import prog_fund
 from gf.cli.display import (
-    display_courses_table,
     display_course_details,
     display_course_info,
+    display_courses_table,
     display_task_analysis,
 )
 from gf.cli.utils import find_course, find_task

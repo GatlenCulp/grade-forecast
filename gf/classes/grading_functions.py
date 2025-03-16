@@ -1,9 +1,7 @@
-from typing import List
-
 from .task import Task
 
 
-def default_raw_grading_function(tasks: List[Task]) -> float:
+def default_raw_grading_function(tasks: list[Task]) -> float:
     """Calculate the raw grade for a list of tasks by averaging their grades.
     Uses base_grade as fallback when grade is None.
 
@@ -22,7 +20,7 @@ def default_raw_grading_function(tasks: List[Task]) -> float:
     return 0
 
 
-def default_true_raw_grading_function(tasks: List[Task]) -> float:
+def default_true_raw_grading_function(tasks: list[Task]) -> float:
     """Calculate the true raw grade for a list of tasks by averaging only actual grades.
     Uses 0 as fallback when grade is None.
 
@@ -39,7 +37,7 @@ def default_true_raw_grading_function(tasks: List[Task]) -> float:
     return 0
 
 
-def default_expected_raw_grading_function(tasks: List[Task]) -> float:
+def default_expected_raw_grading_function(tasks: list[Task]) -> float:
     """Calculate the expected raw grade for a list of tasks.
     Uses expected_grade if available, falls back to base_grade.
 

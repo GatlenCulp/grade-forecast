@@ -1,9 +1,11 @@
 """Main CLI entry point for the grade forecast application."""
 
-import typer
+import builtins
+from typing import Optional
+
 from rich.console import Console
 from rich.table import Table
-from typing import List, Optional, Callable
+import typer
 
 from configs import configs
 from configs.examples.prog_fund import prog_fund
@@ -403,7 +405,7 @@ def update(
 
 @app.command()
 def compare(
-    course_names: Optional[List[str]] = typer.Argument(
+    course_names: Optional[builtins.list[str]] = typer.Argument(
         None, help="Names or aliases of courses to compare"
     ),
 ) -> None:

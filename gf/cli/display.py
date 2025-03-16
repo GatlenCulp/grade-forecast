@@ -1,7 +1,5 @@
 """Display functions for the grade forecast CLI."""
 
-from typing import List
-
 import matplotlib.pyplot as plt
 from rich import box
 from rich.console import Console, Group
@@ -16,7 +14,7 @@ from gf.cli.plotting import plot_course_grade_vs_grade
 console = Console()
 
 
-def display_courses_table(courses: List[Course]) -> None:
+def display_courses_table(courses: list[Course]) -> None:
     """Display available courses in a formatted table.
 
     Args:
@@ -136,7 +134,7 @@ def display_course_details(course: Course) -> None:
     console.print(panel)
 
 
-def display_course_info(course: Course) -> List[Task]:
+def display_course_info(course: Course) -> list[Task]:
     """Display course information and return list of all tasks.
 
     Args:

@@ -5,8 +5,8 @@ This module contains shared fixtures that are automatically available to all tes
 
 from pathlib import Path
 
-import pytest
 from loguru import logger
+import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)

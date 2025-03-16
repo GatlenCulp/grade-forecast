@@ -1,16 +1,11 @@
-from rich import box
-from rich.console import Group
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-from typing import List, Optional, Union, Callable
+from typing import Callable, Optional, Union
 
-from .task import Task, is_proper_fraction
 from .grading_functions import (
+    default_expected_raw_grading_function,
     default_raw_grading_function,
     default_true_raw_grading_function,
-    default_expected_raw_grading_function,
 )
+from .task import Task, is_proper_fraction
 
 
 class GradingGroup:
@@ -20,7 +15,7 @@ class GradingGroup:
         self,
         name: str,
         weight: float,
-        tasks: Union[List[Task], Task, int],
+        tasks: Union[list[Task], Task, int],
         default_pst: float = 5,
         base_grade: float = 0.5,
         expected_grade: Optional[float] = None,
@@ -78,7 +73,7 @@ class GradingGroup:
         """Returns a simple string representation of the grading group."""
         return self.name
 
-    def create_enumerated_tasks(self, n: int) -> List[Task]:
+    def create_enumerated_tasks(self, n: int) -> list[Task]:
         """Create n numbered tasks with default settings.
 
         Args:

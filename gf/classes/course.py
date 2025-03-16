@@ -1,5 +1,5 @@
 import math
-from typing import Dict, List, Optional, Union, Tuple, Any
+from typing import Optional, Union
 
 from rich import box
 from rich.console import Console, Group
@@ -38,9 +38,9 @@ class Course:
         self,
         name: str,
         care_factor: float,
-        grading_groups: List[GradingGroup],
-        grading_boundaries: Dict[str, Tuple[float, float]] = default_grading_boundaries,
-        grade_utils: Dict[str, float] = default_grade_utils,
+        grading_groups: list[GradingGroup],
+        grading_boundaries: dict[str, tuple[float, float]] = default_grading_boundaries,
+        grade_utils: dict[str, float] = default_grade_utils,
         late_policy: Optional[str] = None,
     ):
         self.name = name
