@@ -21,17 +21,22 @@ def create_grading_group_display(grading_group: "GradingGroup") -> Panel:
     """
     # Create table for tasks
     task_table = Table(box=box.SIMPLE, show_header=True, padding=(0, 2))
-    task_table.add_column("Task", style="cyan")
-    task_table.add_column("Grades", style="green")
-    task_table.add_column("Course Contribution", style="yellow")
+    task_table.add_column("Task", style="cyan", width=30)
+    task_table.add_column("Grades", style="green", width=40)
+    task_table.add_column("Course Contribution", style="yellow", width=30)
 
     for task in grading_group.tasks:
+        if task.grade is not None:
+            grade_text = f"{float(task.grade) * 100:>5.1f}%"
+        else:
+            grade_text = "Not graded"
+
         task_table.add_row(
             task.name,
             (
-                f"{float(task.grade or 0) * 100:>5.1f}% "
-                f"(base {float(task.base_grade) * 100:>4.1f}%) "
-                f"(expected {float(task.expected_grade) * 100:>4.1f}%)"
+                f"{grade_text} "
+                f"(base {float(task.base_grade) * 100:>5.1f}%) "
+                f"(expected {float(task.expected_grade) * 100:>5.1f}%)"
             ),
             f"{grading_group.get_marginal_grade_per_hour(task) * 100:>5.2f}%/hr",
         )
@@ -44,7 +49,7 @@ def create_grading_group_display(grading_group: "GradingGroup") -> Panel:
         else 0
     )
 
-    # Create contribution summary
+    # Create contribution summary with consistent formatting
     contributions = Text.assemble(
         ("NO WORK GRADE", "red"),
         f" = {grading_group.get_true_contribution() * 100:>5.2f}% │ ",
@@ -53,11 +58,13 @@ def create_grading_group_display(grading_group: "GradingGroup") -> Panel:
         ("CURRENT GRADE", "green"),
         f" = {current_grade:>5.2f}% │ ",
         ("EXPECTED GRADE", "blue"),
-        f" = {grading_group.get_expected_contribution() * 100:>5.2f}%",
+        f" = {grading_group.get_expected_contribution() * 100:>5.2f}% │ ",
+        ("MAX CONTRIBUTION", "magenta"),
+        f" = {grading_group.weight * 100:>5.2f}%",
     )
 
     # Combine everything in a panel
-    content = Group(task_table, Text("\nContributions:", style="bold white"), contributions)
+    content = Group(task_table, Text("\nContributions:", style="bold cyan"), contributions)
 
     panel = Panel(
         content,

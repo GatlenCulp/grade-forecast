@@ -43,49 +43,51 @@ def display_course_details(course: Course) -> None:
     for group in course.grading_groups:
         # Create table for tasks in this group
         task_table = Table(box=box.SIMPLE, show_header=True, padding=(0, 2))
-        task_table.add_column("Task", style="cyan")
-        task_table.add_column("Grades", style="green")
-        task_table.add_column("Course Contribution", style="yellow")
+        task_table.add_column("Task", style="cyan", width=30)
+        task_table.add_column("Grades", style="green", width=40)
+        task_table.add_column("Course Contribution", style="yellow", width=30)
 
         for task in group.tasks:
             if task.grade is not None:
-                grade_display = f"{task.grade * 100:>4.1f}% (base {task.base_grade * 100:>4.1f}%) (expected {task.expected_grade * 100:>4.1f}%)"
+                grade_display = f"{task.grade * 100:>5.1f}% (base {task.base_grade * 100:>5.1f}%) (expected {task.expected_grade * 100:>5.1f}%)"
             else:
-                grade_display = f"Not graded (base {task.base_grade * 100:>4.1f}%) (expected {task.expected_grade * 100:>4.1f}%)"
+                grade_display = f"Not graded (base {task.base_grade * 100:>5.1f}%) (expected {task.expected_grade * 100:>5.1f}%)"
 
             task_table.add_row(
                 task.name,
                 grade_display,
-                f"{course.get_marginal_grade_per_hour(task) * 100:>4.2f}%/hr course grade contribution",
+                f"{course.get_marginal_grade_per_hour(task) * 100:>5.2f}%/hr course grade contribution",
             )
 
-        # Create contribution summary
+        # Create contribution summary with consistent formatting
         contributions = Text.assemble(
             "\nCONTRIBUTIONS --- ",
             ("NO WORK GRADE", "red"),
-            f" = {group.get_true_contribution() * 100:>4.2f}% | ",
+            f" = {group.get_true_contribution() * 100:>5.2f}% | ",
             ("MIN WORK GRADE", "yellow"),
-            f" = {group.get_contribution() * 100:>4.2f}% | ",
+            f" = {group.get_contribution() * 100:>5.2f}% | ",
             ("CURRENT GRADE", "green"),
-            f" = {group.get_current_contribution() * 100:>4.2f}% | ",
+            f" = {group.get_current_contribution() * 100:>5.2f}% | ",
             ("EXPECTED GRADE", "blue"),
-            f" = {group.get_expected_contribution() * 100:>4.2f}%",
+            f" = {group.get_expected_contribution() * 100:>5.2f}% | ",
+            ("MAX CONTRIBUTION", "magenta"),
+            f" = {group.weight * 100:>5.2f}%",
         )
 
         group_tables.extend(
             [
-                Text(f"\n{group.name}", style="bold white"),
+                Text(f"\n{group.name}", style="bold cyan"),
                 task_table,
                 contributions,
                 Text("\n"),  # Spacing between groups
             ]
         )
 
-    # Create grade summary table
+    # Create grade summary table with consistent formatting
     grade_table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2))
-    grade_table.add_column("Type", style="bold cyan")
-    grade_table.add_column("Value", style="green")
-    grade_table.add_column("Letter", style="yellow")
+    grade_table.add_column("Type", style="bold cyan", width=20)
+    grade_table.add_column("Value", style="green", width=15)
+    grade_table.add_column("Letter", style="yellow", width=10)
 
     grade_table.add_row(
         "EXPECTED GRADE",
@@ -108,10 +110,10 @@ def display_course_details(course: Course) -> None:
         f"({course.get_letter_grade(course.get_true_grade())})",
     )
 
-    # Create boundaries table
+    # Create boundaries table with consistent formatting
     boundaries_table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2))
-    boundaries_table.add_column("Grade", style="bold magenta")
-    boundaries_table.add_column("Range", style="blue")
+    boundaries_table.add_column("Grade", style="bold magenta", width=10)
+    boundaries_table.add_column("Range", style="blue", width=20)
 
     for letter, (lower, upper) in course.grading_boundaries.items():
         boundaries_table.add_row(letter, f"{lower}% - {upper}%")
@@ -119,15 +121,15 @@ def display_course_details(course: Course) -> None:
     # Combine everything in a panel
     content = Group(
         *group_tables,
-        Text("\nGrade Summary:", style="bold white"),
+        Text("\nGrade Summary:", style="bold cyan"),
         grade_table,
-        Text("\nGrade Boundaries:", style="bold white"),
+        Text("\nGrade Boundaries:", style="bold cyan"),
         boundaries_table,
     )
 
     panel = Panel(
         content,
-        title=f"[bold red]COURSE: {course.name}[/bold red]",
+        title=f"[bold cyan]COURSE: {course.name}[/bold cyan]",
         border_style="blue",
     )
 
@@ -145,8 +147,8 @@ def display_course_info(course: Course) -> list[Task]:
     """
     # Create table for task groups
     tasks_table = Table(box=box.ROUNDED, show_header=True, padding=(0, 2))
-    tasks_table.add_column("Group", style="bold cyan")
-    tasks_table.add_column("Weight", style="yellow")
+    tasks_table.add_column("Group", style="bold cyan", width=25)
+    tasks_table.add_column("Weight", style="yellow", width=15)
     tasks_table.add_column("Tasks", style="green")
 
     all_tasks = []
@@ -162,30 +164,30 @@ def display_course_info(course: Course) -> list[Task]:
 
     # Create grade summary table
     grade_table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2))
-    grade_table.add_column("Type", style="bold cyan")
-    grade_table.add_column("Value", style="green")
-    grade_table.add_column("Letter", style="yellow")
+    grade_table.add_column("Type", style="bold cyan", width=20)
+    grade_table.add_column("Value", style="green", width=15)
+    grade_table.add_column("Letter", style="yellow", width=10)
 
     # Add current grades
     grade_table.add_row(
-        "Current Grade",
+        "CURRENT GRADE",
         f"{course.get_current_grade() * 100:<6.2f}%",
         f"({course.get_letter_grade(course.get_current_grade())})",
     )
     grade_table.add_row(
-        "Expected Grade",
+        "EXPECTED GRADE",
         f"{course.get_expected_grade() * 100:<6.2f}%",
         f"({course.get_letter_grade(course.get_expected_grade())})",
     )
 
     # Create group of renderable elements
-    content = Group(tasks_table, Text("\nGrade Summary:", style="bold white"), grade_table)
+    content = Group(tasks_table, Text("\nGrade Summary:", style="bold cyan"), grade_table)
 
     # Create panel with the group
     panel = Panel(
         content,
-        title=f"[bold red]{course.name} Overview[/bold red]",
-        border_style="green",
+        title=f"[bold cyan]{course.name} Overview[/bold cyan]",
+        border_style="blue",
     )
 
     console.print(panel)
@@ -203,29 +205,55 @@ def display_task_analysis(course: Course, task: Task) -> None:
     mgph = course.get_marginal_grade_per_hour(task)
     mgph_tasklevel = task.get_marginal_grade_per_hour()
 
-    info_text = Text()
-    info_text.append(f"--- {task} of {course.name} ---\n", style="bold cyan")
-    info_text.append(
+    # Create a table for task details
+    task_table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2))
+    task_table.add_column("Property", style="bold cyan", width=20)
+    task_table.add_column("Value", style="green")
+
+    # Add task details
+    task_table.add_row("Task Name", task.name)
+    task_table.add_row("Course", course.name)
+    task_table.add_row("Group", group.name)
+    task_table.add_row("Weight in Group", f"{1 / len(group.tasks):.4f}")
+    task_table.add_row("Base Grade", f"{task.base_grade * 100:.2f}%")
+
+    if task.grade is not None:
+        task_table.add_row("Current Grade", f"{task.grade * 100:.2f}%")
+    else:
+        task_table.add_row("Current Grade", "Not graded")
+
+    task_table.add_row("Expected Grade", f"{task.expected_grade * 100:.2f}%")
+    task_table.add_row("Predicted Study Time", f"{task.pst} hours")
+    task_table.add_row("Marginal Grade/Hour", f"{mgph_tasklevel * 100:.4f}%/hr")
+    task_table.add_row("Course Grade Contribution/Hour", f"{mgph * 100:.4f}%/hr")
+    task_table.add_row("Max Contribution", f"{group.get_max_task_contribution(task) * 100:.4f}%")
+
+    # Formula explanation
+    formula_text = Text()
+    formula_text.append("\nGrade Formula:\n", style="bold cyan")
+    formula_text.append(
         f"ΔCG = {mgph * 100:.4f}%/hr * (t hours) + "
         f"{task.base_grade * group.weight / len(group.tasks) * 100:.4f}% "
-        f"for (0 < t < {task.pst}) -> "
-        f"Max Contribution = {group.get_max_task_contribution(task) * 100:.4f}%\n",
-        style="white",
+        f"for (0 < t < {task.pst})\n",
+        style="yellow",
     )
-    info_text.append(
+    formula_text.append(
         f"ΔG = {mgph_tasklevel * 100:.4f}%/hr * (t hours) + "
         f"{task.base_grade * 100:.4f}% "
-        f"for (0 < t < {task.pst}) -> "
-        f"Max Grade = 100%\n",
-        style="white",
-    )
-    info_text.append(
-        f"Assuming without additional work, you get a {task.base_grade * 100:.2f}% "
-        f"and with {task.pst} hours of work you can get a 100%.",
-        style="white",
+        f"for (0 < t < {task.pst})\n",
+        style="yellow",
     )
 
-    console.print(Panel(info_text, title="Task Information", border_style="green"))
+    # Combine everything in a panel
+    content = Group(task_table, formula_text)
+
+    panel = Panel(
+        content,
+        title=f"[bold cyan]Task Analysis: {task.name}[/bold cyan]",
+        border_style="blue",
+    )
+
+    console.print(panel)
 
     fig = plot_course_grade_vs_grade(course, task.name)
     plt.show()
