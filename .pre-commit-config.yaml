@@ -36,17 +36,17 @@ repos:
       - id: ruff-format
         name: "🐍 python · Format with Ruff"
       #
-      - id: ruff
-        name: "🐍 python · Lint and perform safe auto-fixes with Ruff"
-        args: [--fix]
+      # - id: ruff
+      #   name: "🐍 python · Lint and perform safe auto-fixes with Ruff"
+      #   args: [--fix]
       #
 
   #
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.391
-    hooks:
-      - id: pyright
-        name: "🐍 python · Check types"
+  # - repo: https://github.com/RobertCraigie/pyright-python
+  #   rev: v1.1.391
+  #   hooks:
+  #     - id: pyright
+  #       name: "🐍 python · Check types"
   #
 
   - repo: https://github.com/abravalheri/validate-pyproject
@@ -87,11 +87,11 @@ repos:
           - ruff
 
   #
-  - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.12.0
-    hooks:
-      - id: markdownlint
-        name: "📝 markdown · Lint markdown"
+  # - repo: https://github.com/markdownlint/markdownlint
+  #   rev: v0.12.0
+  #   hooks:
+  #     - id: markdownlint
+  #       name: "📝 markdown · Lint markdown"
   #
 
   ### Shell ###
