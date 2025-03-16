@@ -6,9 +6,10 @@
 manual_test/
 
 # Personal Configs
-!configs/examples/
-!configs/__init__.py
 configs/*
+!configs/examples/
+!configs/mit-templates/
+!configs/__init__.py
 
 # Logs
 **/logs/
