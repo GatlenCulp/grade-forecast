@@ -5,6 +5,11 @@
 # Test cache
 manual_test/
 
+# Personal Configs
+!configs/examples/
+!configs/__init__.py
+configs/*
+
 # Logs
 **/logs/
 

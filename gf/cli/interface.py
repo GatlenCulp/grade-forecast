@@ -15,7 +15,7 @@ from rich.text import Text
 from rich.traceback import install
 
 from gf.classes import Course, Task
-from gf.courses import prog_fund
+from gf.examples import prog_fund
 
 # Enable Rich's pretty traceback
 install()
