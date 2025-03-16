@@ -14,6 +14,7 @@ from rich.table import Table
 from rich.text import Text
 from rich.traceback import install
 
+from configs import configs
 from configs.examples.prog_fund import prog_fund
 from gf.classes import Course, Task
 
@@ -24,30 +25,36 @@ install()
 This script lays out the Rich-enhanced command line interface.
 """
 
-courses = [prog_fund]
+courses = configs if configs else [prog_fund]
 console = Console()
 
 
-def plotCourseGradeVsGrade(course: Course, name: str) -> matplotlib.lines.Line2D:
-    assert isinstance(course, Course)
-    assert isinstance(name, str)
-
-    fig = plt.figure()
-    grade_range = np.arange(0, 1, 0.01)
-    x = grade_range
-    y = []
+def plot_course_grade_vs_grade(course: Course, name: str) -> matplotlib.lines.Line2D:
+    """Plot how a task's grade affects the course grade."""
+    # Create a copy of the course to avoid modifying the original
     course_copy = copy.deepcopy(course)
-    task = course_copy.getTask(name)
-    for grade in grade_range:
-        task.setGrade(grade)
-        y.append(course_copy.getGrade())
 
-    plt.plot(x, y, label=f"{course_copy.name} - {name}")
-    plt.xlabel(f"Grade on {name}")
+    # Get the task by name
+    task = course_copy.get_task(name)
+
+    # Create arrays for x and y values
+    x = np.linspace(0, 1, 100)
+    y = []
+
+    # Calculate course grade for each task grade
+    for grade in x:
+        task.set_grade(grade)
+        y.append(course_copy.get_grade())
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+    (line,) = plt.plot(x, y, "b-")
+    plt.xlabel("Task Grade")
     plt.ylabel("Course Grade")
-    plt.title(f"Course Grade vs Grade on {name}")
-    plt.legend()
-    return fig
+    plt.title(f"Effect of {name} on Course Grade")
+    plt.grid(True)
+
+    return line
 
 
 def _display_courses_table(courses: list[Course]) -> None:
@@ -89,23 +96,28 @@ def _display_course_details(course: Course) -> None:
         task_table.add_column("Course Contribution", style="yellow")
 
         for task in group.tasks:
+            if task.grade is not None:
+                grade_display = f"{task.grade * 100:>4.1f}% (base {task.base_grade * 100:>4.1f}%) (expected {task.expected_grade * 100:>4.1f}%)"
+            else:
+                grade_display = f"Not graded (base {task.base_grade * 100:>4.1f}%) (expected {task.expected_grade * 100:>4.1f}%)"
+
             task_table.add_row(
                 task.name,
-                f"{task.grade * 100:>4.1f}% (base {task.base_grade * 100:>4.1f}%) (expected {task.expected_grade * 100:>4.1f}%)",
-                f"{course.getMarginalGradePerHour(task) * 100:>4.2f}%/hr course grade contribution",
+                grade_display,
+                f"{course.get_marginal_grade_per_hour(task) * 100:>4.2f}%/hr course grade contribution",
             )
 
         # Create contribution summary
         contributions = Text.assemble(
             "\nCONTRIBUTIONS --- ",
             ("NO WORK GRADE", "red"),
-            f" = {group.getTrueContribution() * 100:>4.2f}% | ",
+            f" = {group.get_true_contribution() * 100:>4.2f}% | ",
             ("MIN WORK GRADE", "yellow"),
-            f" = {group.getContribution() * 100:>4.2f}% | ",
+            f" = {group.get_contribution() * 100:>4.2f}% | ",
             ("CURRENT GRADE", "green"),
-            f" = {group.getCurrentContribution() * 100:>4.2f}% | ",
+            f" = {group.get_current_contribution() * 100:>4.2f}% | ",
             ("EXPECTED GRADE", "blue"),
-            f" = {group.getExpectedContribution() * 100:>4.2f}%",
+            f" = {group.get_expected_contribution() * 100:>4.2f}%",
         )
 
         group_tables.extend(
@@ -125,23 +137,23 @@ def _display_course_details(course: Course) -> None:
 
     grade_table.add_row(
         "EXPECTED GRADE",
-        f"{course.getExpectedGrade() * 100:<6.2f}%",
-        f"({course.getLetterGrade(course.getExpectedGrade())})",
+        f"{course.get_expected_grade() * 100:<6.2f}%",
+        f"({course.get_letter_grade(course.get_expected_grade())})",
     )
     grade_table.add_row(
         "CURRENT GRADE",
-        f"{course.getCurrentGrade() * 100:<6.2f}%",
-        f"({course.getLetterGrade(course.getCurrentGrade())})",
+        f"{course.get_current_grade() * 100:<6.2f}%",
+        f"({course.get_letter_grade(course.get_current_grade())})",
     )
     grade_table.add_row(
         "MIN WORK GRADE",
-        f"{course.getGrade() * 100:<6.2f}%",
-        f"({course.getLetterGrade(course.getGrade())})",
+        f"{course.get_grade() * 100:<6.2f}%",
+        f"({course.get_letter_grade(course.get_grade())})",
     )
     grade_table.add_row(
         "NO WORK GRADE",
-        f"{course.getTrueGrade() * 100:<6.2f}%",
-        f"({course.getLetterGrade(course.getTrueGrade())})",
+        f"{course.get_true_grade() * 100:<6.2f}%",
+        f"({course.get_letter_grade(course.get_true_grade())})",
     )
 
     # Create boundaries table
@@ -198,13 +210,13 @@ def _display_course_info(course: Course) -> list:
     # Add current grades
     grade_table.add_row(
         "Current Grade",
-        f"{course.getCurrentGrade() * 100:<6.2f}%",
-        f"({course.getLetterGrade(course.getCurrentGrade())})",
+        f"{course.get_current_grade() * 100:<6.2f}%",
+        f"({course.get_letter_grade(course.get_current_grade())})",
     )
     grade_table.add_row(
         "Expected Grade",
-        f"{course.getExpectedGrade() * 100:<6.2f}%",
-        f"({course.getLetterGrade(course.getExpectedGrade())})",
+        f"{course.get_expected_grade() * 100:<6.2f}%",
+        f"({course.get_letter_grade(course.get_expected_grade())})",
     )
 
     # Create group of renderable elements
@@ -229,15 +241,15 @@ def _find_task(task_input: str, course: Course, all_tasks: list) -> Task | None:
         if 0 <= idx < len(all_tasks):
             task = all_tasks[idx]
     else:
-        task = course.getTask(task_input)
+        task = course.get_task(task_input)
     return task
 
 
 def _display_task_analysis(course: Course, task: Task) -> None:
     """Display task analysis information and plot."""
-    gg = course.getParent(task)
-    mgph = course.getMarginalGradePerHour(task)
-    mgph_tasklevel = task.getMarginalGradePerHour()
+    gg = course.get_parent(task)
+    mgph = course.get_marginal_grade_per_hour(task)
+    mgph_tasklevel = task.get_marginal_grade_per_hour()
 
     info_text = Text()
     info_text.append(f"--- {task} of {course.name} ---\n", style="bold cyan")
@@ -245,7 +257,7 @@ def _display_task_analysis(course: Course, task: Task) -> None:
         f"ΔCG = {mgph * 100:.4f}%/hr * (t hours) + "
         f"{task.base_grade * gg.weight / len(gg.tasks) * 100:.4f}% "
         f"for (0 < t < {task.pst}) -> "
-        f"Max Contribution = {gg.getMaxTaskContribution(task) * 100:.4f}%\n",
+        f"Max Contribution = {gg.get_max_task_contribution(task) * 100:.4f}%\n",
         style="white",
     )
     info_text.append(
@@ -263,7 +275,7 @@ def _display_task_analysis(course: Course, task: Task) -> None:
 
     console.print(Panel(info_text, title="Task Information", border_style="green"))
 
-    fig = plotCourseGradeVsGrade(course, task.name)
+    fig = plot_course_grade_vs_grade(course, task.name)
     plt.show()
     plt.close(fig)
 

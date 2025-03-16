@@ -1,4 +1,4 @@
-def isProperFraction(x):
+def is_proper_fraction(x):
     return all((isinstance(x, (float, int)), x >= 0, x <= 1))
 
 
@@ -17,7 +17,7 @@ class Task:
     ):
         assert isinstance(name, str)
         if grade is not None:
-            assert isProperFraction(grade)
+            assert is_proper_fraction(grade)
 
         self.name = name
         self.grade = grade
@@ -28,7 +28,7 @@ class Task:
         #     expected_grade = base_grade
         self.expected_grade = expected_grade
 
-    def getMarginalGradePerHour(self) -> float:
+    def get_marginal_grade_per_hour(self) -> float:
         """MGPH = dG/dt = d/dt ((max_grade - base_grade)/(pst)*t + base_grade) = (max_grade - base_grade)/pst = (1-base_grade)/pst"""
         if self.pst is None:
             raise Exception("pst must be defined before using MGPH")
@@ -37,15 +37,15 @@ class Task:
 
         return (1 - self.base_grade) / self.pst
 
-    def getGrade(self) -> float:
+    def get_grade(self) -> float:
         assert self.grade
         return self.grade
 
-    def setGrade(self, grade) -> None:
-        assert isProperFraction(grade)
+    def set_grade(self, grade) -> None:
+        assert is_proper_fraction(grade)
         self.grade = grade
 
-    def getEffectiveGrade(self) -> float:
+    def get_effective_grade(self) -> float:
         return self.grade if self.grade is not None else self.base_grade
 
     def __str__(self) -> str:

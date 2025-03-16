@@ -3,11 +3,17 @@ from rich.console import Group
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from typing import List, Optional, Union, Callable
 
-from .task import Task, isProperFraction
+from .task import Task, is_proper_fraction
+from .grading_functions import (
+    default_raw_grading_function,
+    default_true_raw_grading_function,
+    default_expected_raw_grading_function,
+)
 
 
-def defaultRawGradingFunction(tasks: list) -> float:
+def default_raw_grading_function(tasks: list) -> float:
     """Calculate the raw grade for a list of tasks by averaging their grades.
     Uses base_grade as fallback when grade is None.
 
@@ -26,7 +32,7 @@ def defaultRawGradingFunction(tasks: list) -> float:
     return 0
 
 
-def defaultTrueRawGradingFunction(tasks: list) -> float:
+def default_true_raw_grading_function(tasks: list) -> float:
     """Calculate the true raw grade for a list of tasks by averaging only actual grades.
     Uses 0 as fallback when grade is None.
 
@@ -43,7 +49,7 @@ def defaultTrueRawGradingFunction(tasks: list) -> float:
     return 0
 
 
-def defaultExpectedRawGradingFunction(tasks: list) -> float:
+def default_expected_raw_grading_function(tasks: list) -> float:
     """Calculate the expected raw grade for a list of tasks.
     Uses expected_grade if available, falls back to base_grade.
 
@@ -64,49 +70,50 @@ def defaultExpectedRawGradingFunction(tasks: list) -> float:
 
 
 class GradingGroup:
-    """grading_function returns a floating point number representing the raw grade (before weight) and is given the list of tasks"""
+    """A group of tasks with a weight that contributes to a course grade."""
 
     def __init__(
         self,
         name: str,
         weight: float,
-        tasks: list,
+        tasks: Union[List[Task], Task, int],
         default_pst: float = 5,
         base_grade: float = 0.5,
-        expected_grade: float | None = None,
-        late_policy: str | None = None,
-        gradingFunction=defaultRawGradingFunction,
-        trueGradingFunction=defaultTrueRawGradingFunction,
-        expectedGradingFunction=defaultExpectedRawGradingFunction,
+        expected_grade: Optional[float] = None,
+        late_policy: Optional[str] = None,
+        grading_function: Callable = default_raw_grading_function,
+        true_grading_function: Callable = default_true_raw_grading_function,
+        expected_grading_function: Callable = default_expected_raw_grading_function,
     ):
         assert isinstance(name, str)
-        assert isProperFraction(weight)
+        assert is_proper_fraction(weight)
         assert isinstance(default_pst, (float, int))
-        assert isProperFraction(base_grade)
-        # assert isProperFraction(expected_grade)
+        assert is_proper_fraction(base_grade)
+        # assert is_proper_fraction(expected_grade)
 
         self.name = name
         self.weight = weight
         self.default_pst = default_pst
         self.base_grade = base_grade
-        self.gradingFunction = gradingFunction
+        self.grading_function = grading_function
         self.late_policy = late_policy
 
-        if gradingFunction != defaultRawGradingFunction:
-            trueGradingFunction = gradingFunction
-            expectedGradingFunction = gradingFunction
-        self.trueGradingFunction = trueGradingFunction
-        self.expectedGradingFunction = expectedGradingFunction
+        if grading_function != default_raw_grading_function:
+            true_grading_function = grading_function
+            expected_grading_function = grading_function
+        self.true_grading_function = true_grading_function
+        self.expected_grading_function = expected_grading_function
 
         if expected_grade is None:
             expected_grade = base_grade
         self.expected_grade = expected_grade
 
         if isinstance(tasks, int):
-            tasks = self.createEnumeratedTasks(tasks)
+            tasks = self.create_enumerated_tasks(tasks)
         elif isinstance(tasks, Task):
             tasks = [tasks]
-        assert isinstance(tasks, list) and (isinstance(tasks[0], Task) if len(tasks) > 0 else True)
+        assert isinstance(tasks, list)
+        assert isinstance(tasks[0], Task) if len(tasks) > 0 else True
         self.tasks = tasks
 
         for task in self.tasks:
@@ -119,65 +126,15 @@ class GradingGroup:
 
     def __str__(self) -> str:
         """Returns a Rich-formatted string representation of the grading group."""
-        # Create table for tasks
-        task_table = Table(box=box.SIMPLE, show_header=True, padding=(0, 2))
-        task_table.add_column("Task", style="cyan")
-        task_table.add_column("Grades", style="green")
-        task_table.add_column("Course Contribution", style="yellow")
+        from .visualization import grading_group_to_string
 
-        for task in self.tasks:
-            task_table.add_row(
-                task.name,
-                (
-                    f"{float(task.grade or 0) * 100:>5.1f}% "
-                    f"(base {float(task.base_grade) * 100:>4.1f}%) "
-                    f"(expected {float(task.expected_grade) * 100:>4.1f}%)"
-                ),
-                f"{self.getMarginalGradePerHour(task) * 100:>5.2f}%/hr",
-            )
-
-        # Get completed tasks for current grade calculation
-        completed_tasks = [task for task in self.tasks if task.grade is not None]
-        current_grade = (
-            (sum(task.grade for task in completed_tasks) / len(completed_tasks) * 100)
-            if completed_tasks
-            else 0
-        )
-
-        # Create contribution summary
-        contributions = Text.assemble(
-            ("NO WORK GRADE", "red"),
-            f" = {self.getTrueContribution() * 100:>5.2f}% │ ",
-            ("MIN WORK GRADE", "yellow"),
-            f" = {self.getContribution() * 100:>5.2f}% │ ",
-            ("CURRENT GRADE", "green"),
-            f" = {current_grade:>5.2f}% │ ",  # <--- [CHANGED] Now shows raw percentage for completed assignments
-            ("EXPECTED GRADE", "blue"),
-            f" = {self.getExpectedContribution() * 100:>5.2f}%",
-        )
-
-        # Combine everything in a panel
-        content = Group(task_table, Text("\nContributions:", style="bold white"), contributions)
-
-        panel = Panel(
-            content,
-            title=f"[bold cyan]{self.name.upper()}[/bold cyan] [yellow](weight = {self.weight * 100:.1f}%)[/yellow]",
-            border_style="blue",
-            box=box.ROUNDED,
-        )
-
-        # Convert to string representation
-        from rich.console import Console
-
-        console = Console(record=True)
-        console.print(panel)
-        return console.export_text()
+        return grading_group_to_string(self)
 
     def __repr__(self) -> str:
         """Returns a simple string representation of the grading group."""
         return self.name
 
-    def createEnumeratedTasks(self, n) -> list:
+    def create_enumerated_tasks(self, n: int) -> List[Task]:
         """Create n numbered tasks with default settings.
 
         Args:
@@ -195,15 +152,15 @@ class GradingGroup:
             for i in range(1, n + 1)
         ]
 
-    def getRawContribution(self) -> float:
+    def get_raw_contribution(self) -> float:
         """Calculate the raw grade contribution before weighting."""
-        return self.gradingFunction(self.tasks)
+        return self.grading_function(self.tasks)
 
-    def getContribution(self) -> float:
+    def get_contribution(self) -> float:
         """Calculate the weighted grade contribution."""
-        return self.getRawContribution() * self.weight
+        return self.get_raw_contribution() * self.weight
 
-    def getTaskContribution(self, task: Task) -> float:
+    def get_task_contribution(self, task: Union[Task, str]) -> float:
         """Calculate a single task's contribution to the final grade.
 
         Args:
@@ -213,14 +170,14 @@ class GradingGroup:
             float: Task's contribution to final grade
         """
         if isinstance(task, str):
-            task = self.getTask(task)
+            task = self.get_task(task)
         assert isinstance(task, Task)
 
         grade = task.grade if task.grade is not None else task.base_grade
         total_tasks = len(self.tasks)
         return self.weight * (grade / total_tasks)
 
-    def getMaxTaskContribution(self, task: Task) -> float:
+    def get_max_task_contribution(self, task: Union[Task, str]) -> float:
         """Calculate a task's maximum possible contribution.
 
         Args:
@@ -230,14 +187,14 @@ class GradingGroup:
             float: Maximum possible contribution to final grade
         """
         if isinstance(task, str):
-            task = self.getTask(task)
+            task = self.get_task(task)
         assert isinstance(task, Task)
 
         grade = 1
         total_tasks = len(self.tasks)
         return self.weight * (grade / total_tasks)
 
-    def getTask(self, name) -> Task:
+    def get_task(self, name: str) -> Task:
         """Find a task by name.
 
         Args:
@@ -254,7 +211,7 @@ class GradingGroup:
                 return task
         raise Exception("Task not found")
 
-    def getMarginalGradePerHour(self, task: Task) -> float:
+    def get_marginal_grade_per_hour(self, task: Union[Task, str]) -> float:
         """Calculate marginal grade increase per hour for a task.
 
         Args:
@@ -264,14 +221,14 @@ class GradingGroup:
             float: Grade increase per hour
         """
         if isinstance(task, str):
-            task = self.getTask(task)
+            task = self.get_task(task)
         assert isinstance(task, Task)
 
         weight = self.weight
         total_tasks = len(self.tasks)
-        return weight * (task.getMarginalGradePerHour() / total_tasks)
+        return weight * (task.get_marginal_grade_per_hour() / total_tasks)
 
-    def getCurrentRawContribution(self) -> float:
+    def get_current_raw_contribution(self) -> float:
         """Calculate raw contribution from only graded tasks.
         Returns the average grade of completed assignments.
         """
@@ -283,7 +240,7 @@ class GradingGroup:
         total_grade = sum(task.grade for task in completed_tasks)
         return total_grade / len(completed_tasks)
 
-    def getCurrentContribution(self) -> float:
+    def get_current_contribution(self) -> float:
         """Calculate weighted contribution from only graded tasks.
         For the current grade calculation, we want this to represent the
         actual grade earned on completed work.
@@ -293,7 +250,7 @@ class GradingGroup:
             return 0
 
         # Get average grade as a percentage
-        raw_grade = self.getCurrentRawContribution()
+        raw_grade = self.get_current_raw_contribution()
 
         # Calculate what portion of the total weight this group has completed
         weight_per_task = self.weight / len(self.tasks)
@@ -302,19 +259,39 @@ class GradingGroup:
         # Return
         return raw_grade * completed_weight
 
-    def getTrueRawContribution(self) -> float:
+    def get_true_raw_contribution(self) -> float:
         """Calculate raw contribution assuming no work done."""
-        return self.trueGradingFunction(self.tasks)
+        return self.true_grading_function(self.tasks)
 
-    def getTrueContribution(self) -> float:
+    def get_true_contribution(self) -> float:
         """Calculate weighted contribution assuming no work done."""
-        return self.getTrueRawContribution() * self.weight
+        return self.get_true_raw_contribution() * self.weight
 
-    def getExpectedRawContribution(self) -> float:
+    def get_expected_raw_contribution(self) -> float:
         """Returns the expected raw grade (before weight) for this grading group."""
-        return self.expectedGradingFunction(self.tasks)
+        return self.expected_grading_function(self.tasks)
 
-    def getExpectedContribution(self) -> float:
+    def get_expected_contribution(self) -> float:
         """Returns the expected contribution of this grading group to the final grade."""
-        raw_contribution = self.getExpectedRawContribution()
-        return raw_contribution * self.weight
+        # Separate completed and incomplete tasks
+        completed_tasks = [task for task in self.tasks if task.grade is not None]
+        incomplete_tasks = [task for task in self.tasks if task.grade is None]
+
+        # If no tasks, return 0
+        if not self.tasks:
+            return 0
+
+        # Calculate the total expected grade
+        total_grade = 0
+
+        # Add actual grades for completed tasks
+        if completed_tasks:
+            total_grade += sum(task.grade for task in completed_tasks)
+
+        # Add expected grades for incomplete tasks
+        if incomplete_tasks:
+            total_grade += sum(task.expected_grade for task in incomplete_tasks)
+
+        # Calculate average and apply weight
+        average_grade = total_grade / len(self.tasks)
+        return average_grade * self.weight

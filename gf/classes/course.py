@@ -1,4 +1,5 @@
 import math
+from typing import Dict, List, Optional, Union, Tuple, Any
 
 from rich import box
 from rich.console import Console, Group
@@ -27,28 +28,21 @@ default_grade_utils = {
 
 
 def sigmoid(x: float) -> float:
-    return 1 / (1 + (math.e) ** (x))
+    return 1 / (1 + math.exp(-x))
 
 
 class Course:
-    """RawUtility(grade [0-1]) [int]: Given the current grade, calculates how happy I will be. (Probably a function just mapping grade -> letter grade -> utility)
-    Utility(grade [0-1]) [int]: RawUtility(grade) * care_factor
-    CurrentUtility() [int]: Utility at the current grade
-    """
+    """A course with grading groups that contribute to a final grade."""
 
     def __init__(
         self,
         name: str,
         care_factor: float,
-        grading_groups: list,
-        grading_boundaries: dict = default_grading_boundaries,
-        grade_utils: dict = default_grade_utils,
-        late_policy: str | None = None,
+        grading_groups: List[GradingGroup],
+        grading_boundaries: Dict[str, Tuple[float, float]] = default_grading_boundaries,
+        grade_utils: Dict[str, float] = default_grade_utils,
+        late_policy: Optional[str] = None,
     ):
-        total_weights = sum([gg.weight for gg in grading_groups])
-        assert total_weights >= 0.99 and total_weights <= 1.01
-        assert isinstance(grading_boundaries, dict)
-
         self.name = name
         self.care_factor = care_factor
         self.grading_groups = grading_groups
@@ -56,165 +50,150 @@ class Course:
         self.grade_utils = grade_utils
         self.late_policy = late_policy
 
-    def getGrade(self) -> float:
-        """The grade or "guaranteed grade" is the grade that you would get putting in MINIMAL effort"""
-        return sum([gg.getContribution() for gg in self.grading_groups])
+    def get_grade(self) -> float:
+        """Calculate the current grade based on completed and base grades."""
+        return sum(group.get_contribution() for group in self.grading_groups)
 
-    def getCurrentGrade(self) -> float:
-        """Calculate current grade as percentage of maximum possible for completed work.
-        If school stopped now, this is what your grade would be based on completed assignments.
-        """
-        completed_weight = 0
-        current_contribution = 0
+    def get_current_grade(self) -> float:
+        """Calculate the current grade based only on completed assignments."""
+        # Get all tasks from all grading groups
+        all_tasks = []
+        for group in self.grading_groups:
+            all_tasks.extend(group.tasks)
+
+        # Check if any tasks have been completed
+        completed_tasks = [task for task in all_tasks if task.grade is not None]
+        if not completed_tasks:
+            return 0  # No tasks completed yet
+
+        # Calculate the current grade based on completed assignments
+        total_contribution = 0
+        for group in self.grading_groups:
+            total_contribution += group.get_current_contribution()
+
+        return total_contribution
+
+    def get_true_grade(self) -> float:
+        """Calculate the grade assuming no work is done."""
+        return sum(group.get_true_contribution() for group in self.grading_groups)
+
+    def get_expected_grade(self) -> float:
+        """Calculate the expected grade based on expected grades."""
+        return sum(group.get_expected_contribution() for group in self.grading_groups)
+
+    def get_letter_grade(self, grade: Optional[float] = None) -> str:
+        """Convert a numerical grade to a letter grade."""
+        if grade is None:
+            grade = self.get_grade()
+
+        for letter, (lower, upper) in self.grading_boundaries.items():
+            if lower <= grade <= upper:
+                return letter
+        return "?"
+
+    def get_task(self, name: str) -> Task:
+        """Find a task by name across all grading groups."""
+        for group in self.grading_groups:
+            try:
+                return group.get_task(name)
+            except Exception:
+                pass
+        raise Exception("Task not found")
+
+    def get_parent(self, task: Union[Task, str]) -> GradingGroup:
+        """Find the grading group that contains a task."""
+        if isinstance(task, str):
+            task_name = task
+        else:
+            task_name = task.name
 
         for group in self.grading_groups:
-            completed_tasks = [task for task in group.tasks if task.grade is not None]
-            if completed_tasks:
-                # Calculate weight of completed assignments in this group
-                group_completed_weight = (len(completed_tasks) / len(group.tasks)) * group.weight
-                completed_weight += group_completed_weight
+            for t in group.tasks:
+                if t.name == task_name:
+                    return group
+        raise Exception("Parent not found")
 
-                # Get raw grade for this group (as percentage)
-                group_raw_grade = sum(task.grade for task in completed_tasks) / len(completed_tasks)
-
-                # Add weighted contribution from this group
-                current_contribution += group_raw_grade * group_completed_weight
-
-        # Return percentage of points earned out of points possible
-        return (current_contribution / completed_weight) if completed_weight > 0 else 0
-
-    def getTrueGrade(self) -> float:
-        """The true grade or "no work grade" is the grade that you get if you did NO more work past this time."""
-        return sum([gg.getTrueContribution() for gg in self.grading_groups])
-
-    def getExpectedGrade(self) -> float:
-        """Returns expected grade where expected grade is the EXPECTED grade for every assignment at EXPECTED effort."""
-        return sum([gg.getExpectedContribution() for gg in self.grading_groups])
-
-    def getLetterGrade(self, grade: float | None = None) -> str:
-        if grade is None:
-            grade = self.getGrade()
-
-        for letter_grade, boundary in self.grading_boundaries.items():
-            lower_bound, upper_bound = boundary
-            if lower_bound / 100 <= grade <= upper_bound / 100:
-                return letter_grade
-        raise Exception("getLetterGrade failed. Bounds not found for grade.")
-
-    def getTask(self, name) -> Task:
-        for gg in self.grading_groups:
-            for task in gg.tasks:
-                if task.name == name:
-                    return task
-        raise Exception(f"Task {name} not found")
-
-    def getParent(self, task) -> GradingGroup:
+    def get_marginal_grade_per_hour(self, task: Union[Task, str]) -> float:
+        """Calculate the marginal grade increase per hour for a task."""
         if isinstance(task, str):
-            task = self.getTask(task)
-        assert isinstance(task, Task)
+            task = self.get_task(task)
+        parent = self.get_parent(task)
+        return parent.get_marginal_grade_per_hour(task)
 
-        for gg in self.grading_groups:
-            for gg_task in gg.tasks:
-                if gg_task == task:
-                    return gg
+    def get_raw_utility(self) -> float:
+        """Calculate the raw utility of the current grade.
 
-        raise Exception(f"Task {task} not found")
-
-    def getMarginalGradePerHour(self, task: Task) -> float:
-        if isinstance(task, str):
-            task = self.getTask(task)
-        assert isinstance(task, Task)
-
-        gg = self.getParent(task)
-        return gg.getMarginalGradePerHour(task)
-
-    def getRawUtility(self) -> float:
-        # THIS UTILITY FUNCTION IS DOG WATER, DOESN'T WORK RIGHT. TRY TO FIX. https://www.desmos.com/calculator/vpdemyatol
-        grade = self.getGrade()
-        w = 300
-        return sum(
-            [
-                util * sigmoid((grade - bound[0]) * w)
-                for util, bound in zip(self.grade_utils, self.grading_boundaries, strict=False)
-            ]
-        ) / sum(self.grade_utils.values())
+        Note: THIS UTILITY FUNCTION IS DOG WATER, DOESN'T WORK RIGHT.
+        TRY TO FIX. https://www.desmos.com/calculator/vpdemyatol
+        """
+        letter_grade = self.get_letter_grade()
+        grade_util = self.grade_utils[letter_grade]
+        care_factor = self.care_factor
+        return sigmoid(grade_util * care_factor)
 
     def __repr__(self) -> str:
         return self.name
 
     def __str__(self) -> str:
         """Returns a Rich-formatted string representation of the course."""
-        console = Console(record=True)
+        # Create table for grading groups
+        group_table = Table(box=box.SIMPLE, show_header=True, padding=(0, 2))
+        group_table.add_column("Grading Group", style="cyan")
+        group_table.add_column("Weight", style="yellow")
+        group_table.add_column("Raw Grade", style="green")
+        group_table.add_column("Contribution", style="blue")
 
-        # Create list to hold all group elements
-        content_elements = []
+        total_grade = 0
+        for group in self.grading_groups:
+            raw_grade = group.get_raw_contribution() * 100
+            contribution = group.get_contribution() * 100
+            total_grade += contribution
+            group_table.add_row(
+                group.name,
+                f"{group.weight * 100:.1f}%",
+                f"{raw_grade:.2f}%",
+                f"{contribution:.2f}%",
+            )
 
-        # Add each grading group
-        for gg in self.grading_groups:
-            content_elements.append(Text(str(gg)))
-            content_elements.append(Text("\n"))  # Add spacing between groups
-
-        # Create grade summary table
-        grade_table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2))
-        grade_table.add_column("Type", style="bold cyan")
-        grade_table.add_column("Value", style="green")
-        grade_table.add_column("Letter", style="yellow")
-
-        # Calculate grades
-        expected_grade = self.getExpectedGrade()
-        current_grade = self.getCurrentGrade()
-        guaranteed_grade = self.getGrade()
-        true_grade = self.getTrueGrade()
-
-        # Add rows to table
-        grade_table.add_row(
-            "EXPECTED GRADE",
-            f"{expected_grade * 100:<6.2f}%",
-            f"({self.getLetterGrade(expected_grade)})",
-        )
-        grade_table.add_row(
-            "CURRENT GRADE",
-            f"{current_grade * 100:<6.2f}%",
-            f"({self.getLetterGrade(current_grade)})",
-        )
-        grade_table.add_row(
-            "MIN WORK GRADE",
-            f"{guaranteed_grade * 100:<6.2f}%",
-            f"({self.getLetterGrade(guaranteed_grade)})",
-        )
-        grade_table.add_row(
-            "NO WORK GRADE",
-            f"{true_grade * 100:<6.2f}%",
-            f"({self.getLetterGrade(true_grade)})",
+        # Add total row
+        group_table.add_row(
+            "TOTAL",
+            f"{sum(group.weight for group in self.grading_groups) * 100:.1f}%",
+            "",
+            f"{total_grade:.2f}%",
         )
 
-        # Create boundaries table
-        boundaries_table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2))
-        boundaries_table.add_column("Grade", style="bold magenta")
-        boundaries_table.add_column("Range", style="blue")
+        # Create grade summary
+        letter_grade = self.get_letter_grade()
+        current_grade = self.get_current_grade() * 100
+        true_grade = self.get_true_grade() * 100
+        expected_grade = self.get_expected_grade() * 100
 
-        for letter, (lower, upper) in self.grading_boundaries.items():
-            boundaries_table.add_row(letter, f"{lower}% - {upper}%")
-
-        # Add grade tables to content
-        content_elements.extend(
-            [
-                Text("\nGrade Summary:", style="bold white"),
-                grade_table,
-                Text("\nGrade Boundaries:", style="bold white"),
-                boundaries_table,
-            ]
+        grade_summary = Text.assemble(
+            ("CURRENT GRADE: ", "bold white"),
+            (f"{current_grade:.2f}%", "green"),
+            " | ",
+            ("NO WORK GRADE: ", "bold white"),
+            (f"{true_grade:.2f}%", "red"),
+            " | ",
+            ("EXPECTED GRADE: ", "bold white"),
+            (f"{expected_grade:.2f}%", "blue"),
+            " | ",
+            ("LETTER GRADE: ", "bold white"),
+            (letter_grade, "yellow"),
         )
 
-        # Create panel with all content
+        # Combine everything in a panel
+        content = Group(group_table, Text("\n"), grade_summary)
+
         panel = Panel(
-            Group(*content_elements),
-            title=f"[bold red]COURSE: {self.name}[/bold red]",
-            border_style="red",
-            padding=(1, 2),
+            content,
+            title=f"[bold cyan]{self.name.upper()}[/bold cyan] [yellow](care factor = {self.care_factor})[/yellow]",
+            border_style="blue",
+            box=box.ROUNDED,
         )
 
-        # Render to string and return
-        with console.capture() as capture:
-            console.print(panel)
-        return capture.get()
+        # Convert to string representation
+        console = Console(record=True)
+        console.print(panel)
+        return console.export_text()
