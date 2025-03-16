@@ -1,19 +1,15 @@
-"""Main CLI interface for a gf."""
+"""Main CLI entry point for the grade forecast application."""
 
 import typer
 
 from gf.cli.interface import interface
 
-app = typer.Typer()
+app = typer.Typer(help="Grade Forecast - Track and forecast your university grades")
 
 
 @app.command()
 def run() -> None:
-    """Run app
-
-    Args:
-        name: Name of the person to greet
-    """
+    """Run the Grade Forecast interactive CLI application."""
     interface()
 
 
