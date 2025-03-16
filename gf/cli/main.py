@@ -71,17 +71,15 @@ def list() -> None:
 
 @app.command()
 def summary() -> None:
-    """Show a summary of all courses."""
-    # Create a table to display course summaries
-    table = Table(title="Course Summary")
-    table.add_column("Course", style="cyan")
-    table.add_column("Current Grade", style="green")
-    table.add_column("Expected Grade", style="blue")
-    table.add_column("Letter Grade", style="yellow")
-    table.add_column("Tasks Completed", style="magenta")
+    """Show a summary of all courses with progress bars."""
+    from rich.panel import Panel
+    from rich.console import Group
+    from rich.text import Text
 
     total_tasks = 0
     completed_tasks = 0
+
+    course_displays = []
 
     for course in courses:
         # Count tasks
@@ -97,27 +95,123 @@ def summary() -> None:
         total_tasks += course_total_tasks
         completed_tasks += course_completed_tasks
 
-        # Add row to table
-        table.add_row(
-            course.name,
-            f"{course.get_current_grade() * 100:.2f}%",
-            f"{course.get_expected_grade() * 100:.2f}%",
-            course.get_letter_grade(),
-            f"{course_completed_tasks}/{course_total_tasks} ({course_completed_tasks / course_total_tasks * 100:.1f}%)",
+        # Create grade progress bar for this course
+        max_width = 60  # Width of the progress bar
+        max_grade = 100  # Maximum possible grade
+
+        # Get grade values
+        expected_grade = course.get_expected_grade() * 100
+        current_grade = course.get_current_grade() * 100
+        min_work_grade = course.get_grade() * 100
+        no_work_grade = course.get_true_grade() * 100
+
+        # Create a list to track where boundary markers should go
+        boundary_positions = {}
+
+        # Find boundary positions
+        boundaries_sorted = sorted(course.grading_boundaries.items(), key=lambda x: x[1][0])
+        for letter, (lower, upper) in boundaries_sorted:
+            if lower > 0:  # Skip the lowest boundary (usually 0)
+                pos = int((lower / max_grade) * max_width)
+                if pos < max_width:
+                    boundary_positions[pos] = letter
+
+        # Calculate positions for grade markers
+        no_work_pos = int((no_work_grade / max_grade) * max_width)
+        min_work_pos = int((min_work_grade / max_grade) * max_width)
+        current_pos = int((current_grade / max_grade) * max_width)
+        expected_pos = int((expected_grade / max_grade) * max_width)
+
+        # Create the progress bar with boundary markers and grade markers included
+        progress_text = Text()
+        for i in range(max_width):
+            # Check if this position has a grade marker
+            if i == no_work_pos:
+                progress_text.append("▼", style="red")
+            elif i == min_work_pos:
+                progress_text.append("▼", style="yellow")
+            elif i == current_pos:
+                progress_text.append("▼", style="green")
+            elif i == expected_pos:
+                progress_text.append("▼", style="blue")
+            # Check if this position has a boundary marker
+            elif i in boundary_positions:
+                progress_text.append("┃", style="bold magenta")
+            else:
+                progress_text.append("─")
+
+        # Add boundary labels (directly above the markers)
+        boundary_labels = Text()
+        boundary_labels.append("\n")
+
+        # Create a string of spaces for positioning
+        label_spaces = [" "] * max_width
+
+        # Add letter labels at boundary positions
+        for pos, letter in boundary_positions.items():
+            label_spaces[pos] = letter
+
+        # Convert to a string and add to boundary_labels
+        boundary_labels.append("".join(label_spaces), style="bold magenta")
+
+        # Add grade values directly to the display
+        grade_values = Text()
+        grade_values.append("\n")
+        grade_values.append(f"NO WORK: {no_work_grade:.2f}%  ", style="red")
+        grade_values.append(f"MIN WORK: {min_work_grade:.2f}%  ", style="yellow")
+        grade_values.append(f"CURRENT: {current_grade:.2f}%  ", style="green")
+        grade_values.append(f"EXPECTED: {expected_grade:.2f}%  ", style="blue")
+        grade_values.append(f"LETTER: {course.get_letter_grade()}", style="magenta")
+
+        # Create completion info
+        completion_info = Text()
+        completion_info.append("\n")
+        completion_info.append(f"TASKS: {course_completed_tasks}/{course_total_tasks} ")
+        completion_info.append(
+            f"({course_completed_tasks / course_total_tasks * 100:.1f}% complete)"
         )
 
-    # Add overall completion row
+        # Create the course progress display
+        course_progress = Group(progress_text, boundary_labels, grade_values, completion_info)
+
+        # Create a panel for this course
+        course_panel = Panel(
+            course_progress, title=f"[bold cyan]{course.name}[/bold cyan]", border_style="blue"
+        )
+
+        course_displays.append(course_panel)
+
+    # Add overall completion info
     if total_tasks > 0:
         completion_percentage = completed_tasks / total_tasks * 100
-        table.add_row(
-            "OVERALL",
-            "",
-            "",
-            "",
-            f"{completed_tasks}/{total_tasks} ({completion_percentage:.1f}%)",
+        overall_text = Text(
+            f"OVERALL: {completed_tasks}/{total_tasks} tasks completed ({completion_percentage:.1f}%)"
         )
+        course_displays.append(overall_text)
 
-    console.print(table)
+    # Add legend
+    legend = Text()
+    legend.append("\n")
+    legend.append("▼", style="red")
+    legend.append(" NO WORK ", style="red")
+    legend.append("    ")
+    legend.append("▼", style="yellow")
+    legend.append(" MIN WORK ", style="yellow")
+    legend.append("    ")
+    legend.append("▼", style="green")
+    legend.append(" CURRENT ", style="green")
+    legend.append("    ")
+    legend.append("▼", style="blue")
+    legend.append(" EXPECTED ", style="blue")
+    legend.append("    ")
+    legend.append("┃", style="magenta")
+    legend.append(" GRADE BOUNDARY", style="magenta")
+
+    course_displays.append(legend)
+
+    # Display all courses
+    for display in course_displays:
+        console.print(display)
 
 
 @app.command()

@@ -186,25 +186,119 @@ def display_course_details(course: Course) -> None:
     grade_table.add_column("Value", style="green", width=15)
     grade_table.add_column("Letter", style="yellow", width=10)
 
+    # Get grade values
+    expected_grade = course.get_expected_grade() * 100
+    current_grade = course.get_current_grade() * 100
+    min_work_grade = course.get_grade() * 100
+    no_work_grade = course.get_true_grade() * 100
+
     grade_table.add_row(
         "EXPECTED GRADE",
-        f"{course.get_expected_grade() * 100:<6.2f}%",
+        f"{expected_grade:<6.2f}%",
         f"({course.get_letter_grade(course.get_expected_grade())})",
     )
     grade_table.add_row(
         "CURRENT GRADE",
-        f"{course.get_current_grade() * 100:<6.2f}%",
+        f"{current_grade:<6.2f}%",
         f"({course.get_letter_grade(course.get_current_grade())})",
     )
     grade_table.add_row(
         "MIN WORK GRADE",
-        f"{course.get_grade() * 100:<6.2f}%",
+        f"{min_work_grade:<6.2f}%",
         f"({course.get_letter_grade(course.get_grade())})",
     )
     grade_table.add_row(
         "NO WORK GRADE",
-        f"{course.get_true_grade() * 100:<6.2f}%",
+        f"{no_work_grade:<6.2f}%",
         f"({course.get_letter_grade(course.get_true_grade())})",
+    )
+
+    # Create grade progress bar
+    max_width = 60  # Width of the progress bar
+    max_grade = 100  # Maximum possible grade
+
+    # Create a list to track where boundary markers should go
+    boundary_positions = {}
+
+    # Find boundary positions
+    boundaries_sorted = sorted(course.grading_boundaries.items(), key=lambda x: x[1][0])
+    for letter, (lower, upper) in boundaries_sorted:
+        if lower > 0:  # Skip the lowest boundary (usually 0)
+            pos = int((lower / max_grade) * max_width)
+            if pos < max_width:
+                boundary_positions[pos] = letter
+
+    # Calculate positions for grade markers
+    no_work_pos = int((no_work_grade / max_grade) * max_width)
+    min_work_pos = int((min_work_grade / max_grade) * max_width)
+    current_pos = int((current_grade / max_grade) * max_width)
+    expected_pos = int((expected_grade / max_grade) * max_width)
+
+    # Create the progress bar with boundary markers and grade markers included
+    progress_text = Text()
+    for i in range(max_width):
+        # Check if this position has a grade marker
+        if i == no_work_pos:
+            progress_text.append("▼", style="red")
+        elif i == min_work_pos:
+            progress_text.append("▼", style="yellow")
+        elif i == current_pos:
+            progress_text.append("▼", style="green")
+        elif i == expected_pos:
+            progress_text.append("▼", style="blue")
+        # Check if this position has a boundary marker
+        elif i in boundary_positions:
+            progress_text.append("┃", style="bold magenta")
+        else:
+            progress_text.append("─")
+
+    # Add boundary labels (directly above the markers)
+    boundary_labels = Text()
+    boundary_labels.append("\n")
+
+    # Create a string of spaces for positioning
+    label_spaces = [" "] * max_width
+
+    # Add letter labels at boundary positions
+    for pos, letter in boundary_positions.items():
+        label_spaces[pos] = letter
+
+    # Convert to a string and add to boundary_labels
+    boundary_labels.append("".join(label_spaces), style="bold magenta")
+
+    # Create the legend for grade summary
+    grade_legend = Text()
+    grade_legend.append("\n\n")
+    grade_legend.append("▼", style="red")
+    grade_legend.append(" NO WORK ", style="red")
+    grade_legend.append("    ")
+    grade_legend.append("▼", style="yellow")
+    grade_legend.append(" MIN WORK ", style="yellow")
+    grade_legend.append("    ")
+    grade_legend.append("▼", style="green")
+    grade_legend.append(" CURRENT ", style="green")
+    grade_legend.append("    ")
+    grade_legend.append("▼", style="blue")
+    grade_legend.append(" EXPECTED ", style="blue")
+    grade_legend.append("    ")
+    grade_legend.append("┃", style="magenta")
+    grade_legend.append(" GRADE BOUNDARY", style="magenta")
+
+    # Add grade values directly to the legend
+    grade_values = Text()
+    grade_values.append("\n")
+    grade_values.append(f"NO WORK: {no_work_grade:.2f}%  ", style="red")
+    grade_values.append(f"MIN WORK: {min_work_grade:.2f}%  ", style="yellow")
+    grade_values.append(f"CURRENT: {current_grade:.2f}%  ", style="green")
+    grade_values.append(f"EXPECTED: {expected_grade:.2f}%", style="blue")
+
+    # Create the grade progress bar group
+    grade_progress = Group(
+        Text("\nGrade Progress:", style="bold cyan"),
+        progress_text,
+        boundary_labels,
+        grade_legend,
+        grade_values,
     )
 
     # Create boundaries table with consistent formatting
@@ -218,10 +312,7 @@ def display_course_details(course: Course) -> None:
     # Combine everything in a panel
     content = Group(
         *group_tables,
-        Text("\nGrade Summary:", style="bold cyan"),
-        grade_table,
-        Text("\nGrade Boundaries:", style="bold cyan"),
-        boundaries_table,
+        grade_progress,
     )
 
     panel = Panel(
