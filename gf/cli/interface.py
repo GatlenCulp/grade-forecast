@@ -1,15 +1,10 @@
 import copy
 
-from classes import Course, Task
-from courses import deep_learning, game_theory, linalg, prog_fund
-
 # Save the figure to a temporary buffer and display it using Rich's Image
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from rich import box
-
-# from rich.image import Image
 from rich.console import Console, Group
 
 # Display the image using Rich
@@ -19,6 +14,9 @@ from rich.table import Table
 from rich.text import Text
 from rich.traceback import install
 
+from gf.classes import Course, Task
+from gf.courses import prog_fund
+
 # Enable Rich's pretty traceback
 install()
 
@@ -26,7 +24,7 @@ install()
 This script lays out the Rich-enhanced command line interface.
 """
 
-courses = [deep_learning, game_theory, linalg, prog_fund]
+courses = [prog_fund]
 console = Console()
 
 

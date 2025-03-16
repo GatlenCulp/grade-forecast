@@ -74,7 +74,7 @@
 #
 # {y, z} = weight of missed readings in {first, second} quarter shifted to {midterm, final}
 
-from classes import Course, GradingGroup, Task
+from gf.classes import Course, GradingGroup, Task
 
 # 6.1010 - Fundamentals of Programming Public
 prog_fund = Course(

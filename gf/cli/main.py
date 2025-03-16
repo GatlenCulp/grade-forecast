@@ -1,19 +1,20 @@
 """Main CLI interface for a gf."""
 
-from loguru import logger
 import typer
+
+from gf.cli.interface import interface
 
 app = typer.Typer()
 
 
 @app.command()
-def hello(name: str = "World") -> None:
-    """Say hello to someone.
+def run() -> None:
+    """Run app
 
     Args:
         name: Name of the person to greet
     """
-    logger.info(f"Hello, {name}!")
+    interface()
 
 
 if __name__ == "__main__":
