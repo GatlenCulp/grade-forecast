@@ -60,25 +60,122 @@ def display_course_details(course: Course) -> None:
             )
 
         # Create contribution summary with consistent formatting
-        contributions = Text.assemble(
-            "\nCONTRIBUTIONS --- ",
-            ("NO WORK GRADE", "red"),
-            f" = {group.get_true_contribution() * 100:>5.2f}% | ",
-            ("MIN WORK GRADE", "yellow"),
-            f" = {group.get_contribution() * 100:>5.2f}% | ",
-            ("CURRENT GRADE", "green"),
-            f" = {group.get_current_contribution() * 100:>5.2f}% | ",
-            ("EXPECTED GRADE", "blue"),
-            f" = {group.get_expected_contribution() * 100:>5.2f}% | ",
-            ("MAX CONTRIBUTION", "magenta"),
-            f" = {group.weight * 100:>5.2f}%",
-        )
+        max_width = 50  # Width of the progress bar
+        max_contribution = group.weight * 100
+
+        # Calculate positions for each marker on the progress bar
+        no_work_pos = int((group.get_true_contribution() * 100 / max_contribution) * max_width)
+        min_work_pos = int((group.get_contribution() * 100 / max_contribution) * max_width)
+        current_pos = int((group.get_current_contribution() * 100 / max_contribution) * max_width)
+        expected_pos = int((group.get_expected_contribution() * 100 / max_contribution) * max_width)
+
+        # Create the progress bar
+        progress_bar = [[] for _ in range(max_width)]  # Each position can have multiple markers
+
+        # Add markers at their positions
+        if no_work_pos < max_width:
+            progress_bar[no_work_pos].append("R")
+        if min_work_pos < max_width:
+            progress_bar[min_work_pos].append("Y")
+        if current_pos < max_width:
+            progress_bar[current_pos].append("G")
+        if expected_pos < max_width:
+            progress_bar[expected_pos].append("B")
+
+        # Add the end marker
+        progress_bar[-1].append("M")
+
+        # Create the progress bar text with proper styling
+        progress_text = Text()
+        for pos in progress_bar:
+            if not pos:  # Empty position
+                progress_text.append("─")
+            elif len(pos) == 1:  # Single marker
+                marker = pos[0]
+                if marker == "R":
+                    progress_text.append("│", style="red")
+                elif marker == "Y":
+                    progress_text.append("│", style="yellow")
+                elif marker == "G":
+                    progress_text.append("│", style="green")
+                elif marker == "B":
+                    progress_text.append("│", style="blue")
+                elif marker == "M":
+                    progress_text.append("►", style="magenta")
+            else:  # Multiple markers stacked
+                # Sort markers in a consistent order: R, Y, G, B, M
+                sorted_markers = sorted(pos, key=lambda m: "RYGBM".index(m))
+                marker_chars = []
+                for marker in sorted_markers:
+                    if marker == "R":
+                        marker_chars.append(("┃", "red"))
+                    elif marker == "Y":
+                        marker_chars.append(("┃", "yellow"))
+                    elif marker == "G":
+                        marker_chars.append(("┃", "green"))
+                    elif marker == "B":
+                        marker_chars.append(("┃", "blue"))
+                    elif marker == "M":
+                        marker_chars.append(("►", "magenta"))
+
+                # Use a thicker character for stacked markers
+                if len(marker_chars) == 2:
+                    progress_text.append("┃", style=marker_chars[0][1])
+                elif len(marker_chars) >= 3:
+                    progress_text.append("╋", style=marker_chars[0][1])
+
+                # Add a note about stacked markers for the legend
+                if "stacked_markers" not in locals():
+                    stacked_markers = True
+
+        # Create the legend
+        legend = Text()
+        legend.append("\n")
+        legend.append("│", style="red")
+        legend.append(" NO WORK ", style="red")
+        legend.append("    ")
+        legend.append("│", style="yellow")
+        legend.append(" MIN WORK ", style="yellow")
+        legend.append("    ")
+        legend.append("│", style="green")
+        legend.append(" CURRENT ", style="green")
+        legend.append("    ")
+        legend.append("│", style="blue")
+        legend.append(" EXPECTED ", style="blue")
+        legend.append("    ")
+        legend.append("►", style="magenta")
+        legend.append(" MAX", style="magenta")
+
+        # Add stacked markers explanation if needed
+        if "stacked_markers" in locals() and stacked_markers:
+            legend.append("\n\n")
+            legend.append("┃", style="cyan")
+            legend.append(" OVERLAPPING MARKERS ", style="cyan")
+            legend.append("    ")
+            legend.append("╋", style="cyan")
+            legend.append(" MULTIPLE OVERLAPPING MARKERS", style="cyan")
+
+        # Create the values text
+        values = Text()
+        values.append("\n")
+        values.append(f"{group.get_true_contribution() * 100:>5.2f}%", style="red")
+        values.append("        ")
+        values.append(f"{group.get_contribution() * 100:>5.2f}%", style="yellow")
+        values.append("        ")
+        values.append(f"{group.get_current_contribution() * 100:>5.2f}%", style="green")
+        values.append("        ")
+        values.append(f"{group.get_expected_contribution() * 100:>5.2f}%", style="blue")
+        values.append("        ")
+        values.append(f"{group.weight * 100:>5.2f}%", style="magenta")
 
         group_tables.extend(
             [
                 Text(f"\n{group.name}", style="bold cyan"),
                 task_table,
-                contributions,
+                Text("\nContribution Progress:", style="bold cyan"),
+                progress_text,
+                legend,
+                values,
                 Text("\n"),  # Spacing between groups
             ]
         )
