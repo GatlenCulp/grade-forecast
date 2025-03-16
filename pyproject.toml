@@ -37,15 +37,6 @@ classifiers = [
     # 
 ]
 
-# 
-[project.urls]
-# PyPI project links
-Repository = "https://github.com/GatlenCulp/grade-forecast"
-# 
-Homepage = "https://GatlenCulp.github.io/grade-forecast/"
-Documentation = "https://GatlenCulp.github.io/grade-forecast/"
-# 
-# 
 
 # ━━━━━━━━━━━━━━━━━━━━━━ Primary Dependencies ━━━━━━━━━━━━━━━━━━━━━━ #
 
@@ -62,13 +53,16 @@ dependencies = [
     "tqdm>=4.67.1",          # 
 ]
 
+[project.urls]
+# PyPI project links
+Repository = "https://github.com/GatlenCulp/grade-forecast"
+Homepage = "https://GatlenCulp.github.io/grade-forecast/"
+Documentation = "https://GatlenCulp.github.io/grade-forecast/"
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Scripts ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
 
-# 
 [project.scripts]
-gf = "gf.cli.main:app"
-# 
-# 
+grade-forecast = "gf.cli.main:app"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━ Extra Dependencies ━━━━━━━━━━━━━━━━━━━━━━━ #
 
