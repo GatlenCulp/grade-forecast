@@ -208,29 +208,15 @@ class GradingGroup:
 
     def get_expected_raw_contribution(self) -> float:
         """Returns the expected raw grade (before weight) for this grading group."""
-        return self.expected_grading_function(self.tasks)
-
-    def get_expected_contribution(self) -> float:
-        """Returns the expected contribution of this grading group to the final grade."""
-        # Separate completed and incomplete tasks
-        completed_tasks = [task for task in self.tasks if task.grade is not None]
-        incomplete_tasks = [task for task in self.tasks if task.grade is None]
-
-        # If no tasks, return 0
         if not self.tasks:
             return 0
 
-        # Calculate the total expected grade
-        total_grade = 0
+        # Use actual grades for completed tasks and expected grades for incomplete tasks
+        total_grade = sum(
+            task.grade if task.grade is not None else task.expected_grade for task in self.tasks
+        )
+        return total_grade / len(self.tasks)
 
-        # Add actual grades for completed tasks
-        if completed_tasks:
-            total_grade += sum(task.grade for task in completed_tasks)
-
-        # Add expected grades for incomplete tasks
-        if incomplete_tasks:
-            total_grade += sum(task.expected_grade for task in incomplete_tasks)
-
-        # Calculate average and apply weight
-        average_grade = total_grade / len(self.tasks)
-        return average_grade * self.weight
+    def get_expected_contribution(self) -> float:
+        """Returns the expected contribution of this grading group to the final grade."""
+        return self.get_expected_raw_contribution() * self.weight

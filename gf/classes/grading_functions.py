@@ -39,7 +39,7 @@ def default_true_raw_grading_function(tasks: list[Task]) -> float:
 
 def default_expected_raw_grading_function(tasks: list[Task]) -> float:
     """Calculate the expected raw grade for a list of tasks.
-    Uses expected_grade if available, falls back to base_grade.
+    Uses actual grades for completed tasks and expected_grade for incomplete tasks.
 
     Args:
         tasks (list): List of Task objects to grade
@@ -51,7 +51,6 @@ def default_expected_raw_grading_function(tasks: list[Task]) -> float:
 
     if tasks:
         return sum(
-            task.expected_grade if task.expected_grade is not None else task.base_grade
-            for task in tasks
+            task.grade if task.grade is not None else task.expected_grade for task in tasks
         ) / len(tasks)
     return 0
